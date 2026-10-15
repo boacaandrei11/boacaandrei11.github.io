@@ -62,7 +62,7 @@ window.ASF_CONTENT = {
       "[Explain the purpose of the external speaker and how sounds may communicate vehicle behavior.]",
       "[Ask participants to enable sound, use headphones if possible and set a comfortable volume.]"
     ],
-    callout: "8 videos · 8 multiple-choice questions · Audio required"
+    callout: "4 audio clips + 4 videos · 8 multiple-choice questions · Sound required"
   },
 
   // The next array creates all 16 LED video + question pairs automatically.
@@ -86,7 +86,7 @@ window.ASF_CONTENT = {
   sound: Array.from({ length: 8 }, (_, index) => ({
     id: `sound-${String(index + 1).padStart(2, "0")}`,
     title: `Sound — Scenario ${index + 1}`,
-    video: `videos/sound-${String(index + 1).padStart(2, "0")}.mp4`,
+    video: `videos/sound-${String(index + 1).padStart(2, "0")}.${index < 4 ? "mp3" : "mp4"}`,
     videoCaption: `[Describe sound scenario ${index + 1} here; avoid revealing the answer.]`,
     question: `[Sound ${index + 1}] What do you think the vehicle is communicating?`,
     choices: [
