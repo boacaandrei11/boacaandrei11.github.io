@@ -4,6 +4,6 @@
    Leave blank for demo mode: results download as JSON to your own device instead.
 */
 window.ASF_BACKEND = {
-  supabaseUrl: "",
-  publishableKey: ""
+  supabaseUrl: "https://gtutbdgmuwjzlxrtjmmg.supabase.co/rest/v1/",
+  publishableKey: "sb_publishable_wGWCKhTdNOlFkOr7SX4h5Q_EukvxSLR"
 };
