@@ -120,9 +120,9 @@
       <div class="video-frame">
         ${mediaElement}
         <div id="video-placeholder" class="video-placeholder" hidden>
-          <div class="video-placeholder-icon">${audioOnly ? "♫" : "▶"}</div><strong>${audioOnly ? "Audio placeholder" : "Video placeholder"}</strong>
-          <p>Add your ${audioOnly ? "MP3" : "MP4"} to:</p><code>${escapeHtml(scenario.video)}</code>
-          <small>The demo can continue without the file. After adding it, full playback is required.</small>
+          <div class="video-placeholder-icon">${audioOnly ? "♫" : "▶"}</div><strong>Recording unavailable</strong>
+          <p>This recording is not available in the current preview.</p>
+          <small>You can continue exploring the questionnaire; real submissions require all recordings.</small>
         </div>
         <span class="video-badge">${audioOnly ? "MP3 · Audio" : "MP4 · Video"}</span>
       </div>
@@ -167,7 +167,7 @@
         <label><span>Email <em>(optional)</em></span><input id="personal-email" autocomplete="email" type="email" maxlength="254" placeholder="name@example.com" value="${escapeHtml(state.details.email)}"></label>
         <label><span>Age group <em>(optional)</em></span><select id="personal-age"><option value="">Prefer not to say / choose...</option>${["Under 18", "18–24", "25–34", "35–44", "45–54", "55–64", "65+"].map(x => `<option value="${escapeHtml(x)}" ${state.details.ageRange === x ? "selected" : ""}>${escapeHtml(x)}</option>`).join("")}</select></label>
       </div>
-      <div class="privacy-note"><strong>Privacy reminder</strong><p>If you choose to continue without personal details, the form will not ask for your name or email. Website and hosting services may still process technical access data. Add a university-approved privacy notice before collecting real responses.</p></div>
+      <div class="privacy-note"><strong>Privacy reminder</strong><p>If you choose to continue without personal details, the form will not ask for your name or email. Website and hosting services may still process technical access data.</p></div>
       <div id="submit-error" role="alert" class="form-error" hidden></div>
     </div>`;
   }
@@ -261,8 +261,8 @@
       if (audioArt) audioArt.hidden = true;
       placeholder.hidden = false;
       toggle.hidden = true;
-      status.textContent = "Demo placeholder: real video not uploaded yet.";
-      document.querySelector("#next-button").innerHTML = 'Continue demo <span aria-hidden="true">→</span>';
+      status.textContent = "Recording unavailable in this preview.";
+      document.querySelector("#next-button").innerHTML = 'Continue preview <span aria-hidden="true">→</span>';
       updateNextAvailability();
     }
 
