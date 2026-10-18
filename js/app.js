@@ -47,7 +47,6 @@
     identityMode: "anonymous",
     details: { name: "", email: "", ageRange: "" },
     submitted: false,
-    demo: false,
     isSending: false
   };
 
@@ -121,8 +120,8 @@
         ${mediaElement}
         <div id="video-placeholder" class="video-placeholder" hidden>
           <div class="video-placeholder-icon">${audioOnly ? "♫" : "▶"}</div><strong>Recording unavailable</strong>
-          <p>This recording is not available in the current preview.</p>
-          <small>You can continue exploring the questionnaire; real submissions require all recordings.</small>
+          <p>We could not load this recording.</p>
+          <small>Check your internet connection and select Retry recording. You cannot continue until this recording has finished.</small>
         </div>
         <span class="video-badge">${audioOnly ? "MP3 · Audio" : "MP4 · Video"}</span>
       </div>
@@ -174,8 +173,8 @@
 
   function renderComplete() {
     return `<div class="page-content complete-content"><div class="success-icon">✓</div>
-      ${heading(state.demo ? "LOCAL TEST COMPLETED" : "RESPONSES SUBMITTED", state.demo ? "Test responses downloaded." : "Your responses have been received.")}
-      <div class="prose"><p>${state.demo ? "You are currently in demo mode. A JSON file was downloaded to your computer; nothing has been sent to the research team. Connect Supabase before sharing this questionnaire with participants." : "Thank you for contributing to this research. You can now close this page."}</p></div>
+      ${heading("RESPONSES SUBMITTED", "Your responses have been received.")}
+      <div class="prose"><p>Thank you for contributing to this research. You can now close this page.</p></div>
       <div class="callout"><span aria-hidden="true">✓</span><p>${scenarios.length} video questions completed</p></div>
     </div>`;
   }
@@ -199,13 +198,13 @@
     const atStart = state.position === 0;
     const atEnd = screen.kind === "complete";
     if (atEnd) {
-      controls.innerHTML = `<span class="submitted-indicator">✓ ${state.demo ? "Demo finished" : "Submission complete"}</span>`;
-      footerNote.textContent = state.demo ? "Demo mode — no responses were transmitted" : "Thank you for participating";
+      controls.innerHTML = `<span class="submitted-indicator">✓ Submission complete</span>`;
+      footerNote.textContent = "Thank you for participating";
       return;
     }
     const nextLabel = screen.kind === "welcome" ? "Begin study" :
       screen.kind === "video" ? "Continue to question" :
-      screen.kind === "details" ? (isConfigured() ? "Submit responses" : "Download test responses") :
+      screen.kind === "details" ? "Submit responses" :
       screen.kind === "thanks" ? "Personal details" : "Continue";
     controls.innerHTML = `<button type="button" class="btn btn-secondary" id="prev-button" ${atStart ? "disabled" : ""}>← Back</button>
       <button type="button" class="btn btn-primary" id="next-button">${escapeHtml(nextLabel)} <span aria-hidden="true">→</span></button>`;
@@ -255,19 +254,40 @@
       video.addEventListener("play", enforceLedMute);
     }
 
+    const mediaLabel = video.tagName.toLowerCase() === "audio" ? "audio" : "video";
+
     function showMissingVideo() {
+      if (!video.isConnected) return;
       state.missingVideos[id] = true;
       video.hidden = true;
       if (audioArt) audioArt.hidden = true;
       placeholder.hidden = false;
-      toggle.hidden = true;
-      status.textContent = "Recording unavailable in this preview.";
-      document.querySelector("#next-button").innerHTML = 'Continue preview <span aria-hidden="true">→</span>';
+      toggle.hidden = false;
+      toggle.textContent = "↻ Retry recording";
+      status.textContent = "Recording unavailable. Check your connection and select Retry recording.";
       updateNextAvailability();
     }
 
     video.addEventListener("error", showMissingVideo);
-    const mediaLabel = video.tagName.toLowerCase() === "audio" ? "audio" : "video";
+
+    function retryRecording() {
+      if (!video.isConnected) return;
+      state.missingVideos[id] = false;
+      placeholder.hidden = true;
+      video.hidden = false;
+      if (audioArt) audioArt.hidden = false;
+      toggle.textContent = `▶ Play ${mediaLabel}`;
+      status.textContent = "Retrying recording…";
+      fill.style.width = "0%";
+      enforceLedMute();
+      try {
+        video.load();
+        startPlayback();
+      } catch (error) {
+        showMissingVideo();
+      }
+      updateNextAvailability();
+    }
 
     // Start media immediately upon entering a scenario. Because this is called
     // synchronously from the participant's Continue/Back click, sound playback
@@ -299,7 +319,8 @@
     }
 
     toggle.addEventListener("click", () => {
-      if (video.paused) startPlayback();
+      if (state.missingVideos[id]) retryRecording();
+      else if (video.paused) startPlayback();
       else video.pause();
     });
     video.addEventListener("play", () => {
@@ -320,8 +341,8 @@
       fill.style.width = "100%";
       updateNextAvailability();
     });
-    if (state.missingVideos[id]) showMissingVideo();
-    else startPlayback(true);
+    // Autoplay remains enabled; on a loading error, the participant must retry.
+    startPlayback(true);
   }
 
   function setupDetails() {
@@ -343,8 +364,8 @@
     if (!next) return;
     next.disabled = state.isSending ||
       (screen.kind === "welcome" && !state.consent) ||
-      (screen.kind === "video" && !state.watched[screen.scenario.id] && !state.missingVideos[screen.scenario.id]) ||
-      (screen.kind === "question" && state.answers[screen.scenario.id] === undefined);
+      (screen.kind === "video" && (state.missingVideos[screen.scenario.id] || !state.watched[screen.scenario.id])) ||
+      (screen.kind === "question" && (!state.watched[screen.scenario.id] || state.answers[screen.scenario.id] === undefined));
   }
 
   function navigate(offset) {
@@ -378,24 +399,27 @@
         video_filename: s.video,
         media_type: /\.mp3(?:[?#].*)?$/i.test(s.video) ? "audio" : "video",
         video_completed: Boolean(state.watched[s.id]),
-        demo_video_missing: Boolean(state.missingVideos[s.id])
+        demo_video_missing: false
       }))
     };
   }
 
-  function downloadDemoJson(payload) {
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const link = document.createElement("a");
-    const objectUrl = URL.createObjectURL(blob);
-    link.href = objectUrl;
-    link.download = `asf-demo-${payload.participant_id}.json`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+  // Validate the complete questionnaire before sending any real participant data.
+  function questionnaireError() {
+    if (!state.consent) return "Please provide consent before submitting.";
+    if (scenarios.length !== 24) return "The questionnaire is not configured with all 24 scenarios. Please contact the research team.";
+    const missing = scenarios.find(s => state.missingVideos[s.id]);
+    if (missing) return `Recording ${missing.id} failed to load. Please go back and retry it before submitting.`;
+    const notFinished = scenarios.find(s => state.watched[s.id] !== true);
+    if (notFinished) return `Recording ${notFinished.id} was not completed. Please go back and finish it.`;
+    const invalid = scenarios.find(s => !Number.isInteger(state.answers[s.id]) ||
+      state.answers[s.id] < 0 || state.answers[s.id] >= s.choices.length);
+    if (invalid) return `Please select a valid answer for ${invalid.id} before submitting.`;
+    return null;
   }
 
   async function submitResponses() {
+    if (state.isSending || state.submitted) return;
     const emailField = document.querySelector("#personal-email");
     if (state.identityMode === "details" && emailField.value && !emailField.checkValidity()) {
       emailField.reportValidity();
@@ -403,29 +427,18 @@
     }
     const error = document.querySelector("#submit-error");
     error.hidden = true;
-    if (scenarios.some(s => state.answers[s.id] === undefined)) {
-      error.textContent = "Please complete all scenario questions before submitting.";
+    const validationMessage = questionnaireError();
+    if (validationMessage) {
+      error.textContent = validationMessage;
+      error.hidden = false;
+      return;
+    }
+    if (!isConfigured()) {
+      error.textContent = "The submission service is currently unavailable. Please contact the research team.";
       error.hidden = false;
       return;
     }
     const payload = buildPayload();
-    if (isConfigured() && scenarios.some(s => state.missingVideos[s.id])) {
-      error.textContent = "This questionnaire is not ready for real submissions: one or more simulation video files are missing. Please contact the research team.";
-      error.hidden = false;
-      return;
-    }
-    if (!backend.supabaseUrl?.trim() && !backend.publishableKey?.trim()) {
-      downloadDemoJson(payload);
-      state.demo = true;
-      state.submitted = true;
-      navigate(1);
-      return;
-    }
-    if (!isConfigured()) {
-      error.textContent = "Supabase configuration is incomplete. Set both values in js/config.js.";
-      error.hidden = false;
-      return;
-    }
     state.isSending = true;
     const next = document.querySelector("#next-button");
     next.textContent = "Submitting…";
@@ -443,7 +456,6 @@
       });
       if (!response.ok) throw new Error(`Server returned HTTP ${response.status}.`);
       state.submitted = true;
-      state.demo = false;
       navigate(1);
     } catch (reason) {
       error.textContent = `Could not submit responses. Please check your connection and try again. ${reason.message || ""}`;
@@ -459,8 +471,8 @@
     const screen = sequence[state.position];
     if (screen.kind === "details") { void submitResponses(); return; }
     if (screen.kind === "welcome" && !state.consent) return;
-    if (screen.kind === "question" && state.answers[screen.scenario.id] === undefined) return;
-    if (screen.kind === "video" && !state.watched[screen.scenario.id] && !state.missingVideos[screen.scenario.id]) return;
+    if (screen.kind === "question" && (!state.watched[screen.scenario.id] || state.answers[screen.scenario.id] === undefined)) return;
+    if (screen.kind === "video" && (state.missingVideos[screen.scenario.id] || !state.watched[screen.scenario.id])) return;
     navigate(1);
   }
 
