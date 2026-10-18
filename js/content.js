@@ -18,7 +18,7 @@ window.ASF_CONTENT = {
     "subtitle": "An interactive research questionnaire",
     "university": "0HM310 · Automotive societal factors · Q1 (2026) - group 4",
     "estimatedTime": "10 minutes",
-    "version": "draft-5"
+    "version": "ASF-G4-v1.0"
   },
   "welcome": {
     "eyebrow": "WELCOME TO THE STUDY",
