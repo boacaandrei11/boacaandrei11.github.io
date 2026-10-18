@@ -20,6 +20,7 @@
   const paragraphs = lines => lines.map(p => `<p>${escapeHtml(p)}</p>`).join("");
 
   const sequence = [
+    { kind: "consent", group: "intro" },
     { kind: "welcome", group: "intro" },
     ...content.contextPages.map((_, i) => ({ kind: "context", index: i, group: "intro" })),
     { kind: "intro", group: "led" },
@@ -90,6 +91,34 @@
     </div>`;
   }
 
+  // The first screen presents study information and records explicit consent.
+  // Keep this wording aligned with your institution's approved participant notice.
+  function renderConsent() {
+    return `<div class="page-content text-content">
+      <span class="eyebrow">BEFORE YOU BEGIN</span>
+      <h2 class="page-title">Participant information &amp; consent</h2>
+      <p class="content-lede">Please read this information before deciding whether to take part in the study.</p>
+      <div class="prose">
+        <p><strong>About this research</strong><br>
+        This questionnaire is part of the Automotive Societal Factors (0HM310) course project carried out by Group 4 at Eindhoven University of Technology (TU/e). We are studying how automated vehicles can communicate with pedestrians through LED light signals and external sounds, including considerations for pedestrians who are blind or deaf.</p>
+        <p><strong>What participation involves</strong><br>
+        The questionnaire takes approximately 10 minutes. You will experience 24 short scenarios: 16 silent videos showing an LED lightbar, four audio clips, and four videos with sound. After each scenario, you will answer one question about your interpretation of the situation or how safe you would feel crossing.</p>
+        <p><strong>Your choice</strong><br>
+        Participation is voluntary. You may decide not to participate, or close the questionnaire before submitting, without giving a reason. Your answers are sent to the research database only when you select Submit responses at the end.</p>
+        <p><strong>Information collected</strong><br>
+        We collect your answers, which recordings were completed, and a randomly generated participant identifier. At the end, you can choose whether to provide your name, email address, and age group; these details are optional.</p>
+        <p><strong>Data and privacy</strong><br>
+        Submitted responses are stored in a Supabase-hosted database for analysis as part of this university course project. The questionnaire is hosted on GitHub Pages; the hosting and database services may process technical connection information. If you provide personal details, they are stored with your responses. Without identifying details, it may be difficult to find and remove your specific answers after submission.</p>
+        <p><strong>Questions about the study</strong><br>
+        If you have a question about the questionnaire or the use of your responses, please contact the research team member who shared the questionnaire with you.</p>
+      </div>
+      <label class="consent-box" for="consent-checkbox">
+        <input id="consent-checkbox" type="checkbox" ${state.consent ? "checked" : ""}>
+        <span>I have read the participant information, understand that taking part is voluntary, and agree to participate in this study.</span>
+      </label>
+    </div>`;
+  }
+
   function renderWelcome() {
     const info = content.welcome;
     return `<div class="page-content welcome-content">
@@ -99,7 +128,6 @@
       <p class="hero-subtitle">${escapeHtml(content.project.subtitle)}</p>
       <div class="study-stats"><span>◷ ${escapeHtml(content.project.estimatedTime)}</span><span>▤ ${scenarios.length} scenarios</span><span>⌂ ${escapeHtml(content.project.university)}</span></div>
       <div class="prose">${paragraphs(info.paragraphs)}</div>
-      <label class="consent-box"><input id="consent-checkbox" type="checkbox" ${state.consent ? "checked" : ""}><span>${escapeHtml(info.consent)}</span></label>
     </div>`;
   }
 
@@ -184,6 +212,7 @@
     renderSidebar();
     renderProgress();
     const pageHtml = {
+      consent: () => renderConsent(),
       welcome: () => renderWelcome(),
       context: () => renderTextPage(content.contextPages[screen.index], "◌"),
       intro: () => renderTextPage(screen.group === "led" ? content.ledIntro : content.soundIntro, screen.group === "led" ? "◎" : "♫"),
@@ -195,22 +224,32 @@
     }[screen.kind];
     page.innerHTML = pageHtml();
 
-    const atStart = state.position === 0;
     const atEnd = screen.kind === "complete";
     if (atEnd) {
       controls.innerHTML = `<span class="submitted-indicator">✓ Submission complete</span>`;
       footerNote.textContent = "Thank you for participating";
       return;
     }
-    const nextLabel = screen.kind === "welcome" ? "Begin study" :
+    const nextLabel = screen.kind === "consent" ? "Agree and continue" :
+      screen.kind === "welcome" ? "Begin study" :
       screen.kind === "video" ? "Continue to question" :
       screen.kind === "details" ? "Submit responses" :
       screen.kind === "thanks" ? "Personal details" : "Continue";
-    controls.innerHTML = `<button type="button" class="btn btn-secondary" id="prev-button" ${atStart ? "disabled" : ""}>← Back</button>
+    controls.innerHTML = `${screen.kind === "consent"
+      ? '<button type="button" class="btn btn-secondary" id="decline-button">I do not agree</button>'
+      : '<button type="button" class="btn btn-secondary" id="prev-button">← Back</button>'}
       <button type="button" class="btn btn-primary" id="next-button">${escapeHtml(nextLabel)} <span aria-hidden="true">→</span></button>`;
-    document.querySelector("#prev-button").addEventListener("click", () => navigate(-1));
+    document.querySelector("#prev-button")?.addEventListener("click", () => navigate(-1));
+    document.querySelector("#decline-button")?.addEventListener("click", () => {
+      state.consent = false;
+      page.innerHTML = `<div class="page-content text-content">
+        ${heading("PARTICIPATION DECLINED", "Thank you for your consideration.")}
+        <div class="prose"><p>You have chosen not to participate. No questionnaire answers have been submitted. You can close this page.</p></div>
+      </div>`;
+      controls.innerHTML = '<span class="submitted-indicator">No responses submitted</span>';
+    });
     document.querySelector("#next-button").addEventListener("click", onNext);
-    if (screen.kind === "welcome") {
+    if (screen.kind === "consent") {
       const checkbox = document.querySelector("#consent-checkbox");
       checkbox.addEventListener("change", e => { state.consent = e.target.checked; updateNextAvailability(); });
     }
@@ -363,7 +402,7 @@
     const next = document.querySelector("#next-button");
     if (!next) return;
     next.disabled = state.isSending ||
-      (screen.kind === "welcome" && !state.consent) ||
+      ((screen.kind === "consent" || screen.kind === "welcome") && !state.consent) ||
       (screen.kind === "video" && (state.missingVideos[screen.scenario.id] || !state.watched[screen.scenario.id])) ||
       (screen.kind === "question" && (!state.watched[screen.scenario.id] || state.answers[screen.scenario.id] === undefined));
   }
@@ -470,7 +509,7 @@
   function onNext() {
     const screen = sequence[state.position];
     if (screen.kind === "details") { void submitResponses(); return; }
-    if (screen.kind === "welcome" && !state.consent) return;
+    if ((screen.kind === "consent" || screen.kind === "welcome") && !state.consent) return;
     if (screen.kind === "question" && (!state.watched[screen.scenario.id] || state.answers[screen.scenario.id] === undefined)) return;
     if (screen.kind === "video" && (state.missingVideos[screen.scenario.id] || !state.watched[screen.scenario.id])) return;
     navigate(1);
