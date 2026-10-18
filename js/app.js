@@ -110,9 +110,9 @@
     const audioOnly = /\.mp3(?:[?#].*)?$/i.test(scenario.video);
     const ledSilent = group === "led";
     const mediaElement = audioOnly
-      ? `<audio id="stimulus-video" preload="metadata" src="${escapeHtml(scenario.video)}" aria-label="Audio stimulus: ${escapeHtml(scenario.title)}"></audio>
-         <div class="audio-art" id="audio-art" aria-hidden="true"><div class="audio-art-icon">♫</div><div class="audio-art-label">Audio scenario</div><div class="audio-art-sub">Press Play audio below to listen</div></div>`
-      : `<video id="stimulus-video" preload="metadata" playsinline ${ledSilent ? "muted" : ""} src="${escapeHtml(scenario.video)}" aria-label="Simulation video: ${escapeHtml(scenario.title)}"></video>`;
+      ? `<audio id="stimulus-video" preload="auto" src="${escapeHtml(scenario.video)}" aria-label="Audio stimulus: ${escapeHtml(scenario.title)}"></audio>
+         <div class="audio-art" id="audio-art" aria-hidden="true"><div class="audio-art-icon">♫</div><div class="audio-art-label">Audio scenario</div><div class="audio-art-sub">Audio starts automatically when this scenario opens</div></div>`
+      : `<video id="stimulus-video" preload="auto" playsinline ${ledSilent ? "muted" : ""} src="${escapeHtml(scenario.video)}" aria-label="Simulation video: ${escapeHtml(scenario.title)}"></video>`;
     return `<div class="page-content video-content">
       <span class="eyebrow">${group === "led" ? "PART ONE / LED LIGHTBAR" : "PART TWO / SOUND"} — ${String(index + 1).padStart(2, "0")} OF ${group === "led" ? content.led.length : content.sound.length}</span>
       <h2 class="page-title">${escapeHtml(scenario.title)}</h2>
@@ -126,7 +126,7 @@
         </div>
         <span class="video-badge">${audioOnly ? "MP3 · Audio" : "MP4 · Video"}</span>
       </div>
-      <div class="video-toolbar"><button class="mini-button" id="play-toggle" type="button">▶ Play ${audioOnly ? "audio" : "video"}</button><span id="video-status" role="status">${watched ? "✓ Playback complete — you can continue or replay." : "Play the entire recording to unlock the question."}</span></div>
+      <div class="video-toolbar"><button class="mini-button" id="play-toggle" type="button">▶ Play ${audioOnly ? "audio" : "video"}</button><span id="video-status" role="status">${watched ? "✓ Playback complete — you can continue or replay." : "Starting recording automatically…"}</span></div>
       <div class="video-timeline"><div id="video-timeline-fill"></div></div>
       <p class="video-caption">${escapeHtml(scenario.videoCaption)}</p>
       ${group === "sound" ? `<div class="small-notice">♫ Enable sound, set a comfortable volume, and use headphones if possible.</div>` : `<div class="small-notice">🔇 The LED lightbar scenarios are intentionally silent. Audio playback is disabled.</div>`}
@@ -267,15 +267,47 @@
     }
 
     video.addEventListener("error", showMissingVideo);
-    toggle.addEventListener("click", async () => {
-      if (video.paused) {
-        enforceLedMute();
-        try { await video.play(); } catch { status.textContent = "Playback failed. Check that the MP3/MP4 file exists and is playable in your browser."; }
-      } else { video.pause(); }
+    const mediaLabel = video.tagName.toLowerCase() === "audio" ? "audio" : "video";
+
+    // Start media immediately upon entering a scenario. Because this is called
+    // synchronously from the participant's Continue/Back click, sound playback
+    // is allowed in many browsers. Some browsers still block audible autoplay.
+    // If so, preserve a visible Play button rather than muting the sound stimulus.
+    function startPlayback(automatic = false) {
+      enforceLedMute();
+      let playRequest;
+      try {
+        playRequest = video.play();
+      } catch (error) {
+        handlePlayFailure(error, automatic);
+        return;
+      }
+      if (playRequest && typeof playRequest.catch === "function") {
+        playRequest.catch(error => handlePlayFailure(error, automatic));
+      }
+    }
+
+    function handlePlayFailure(error, automatic) {
+      if (!video.isConnected || state.missingVideos[id]) return;
+      if (error?.name === "AbortError") return; // e.g. navigating away mid-load
+      toggle.textContent = `▶ Play ${mediaLabel}`;
+      if (automatic && error?.name === "NotAllowedError") {
+        status.textContent = `Your browser blocked automatic ${mediaLabel} playback. Press Play ${mediaLabel} to continue.`;
+      } else {
+        status.textContent = `Playback could not start. Press Play ${mediaLabel} to retry.`;
+      }
+    }
+
+    toggle.addEventListener("click", () => {
+      if (video.paused) startPlayback();
+      else video.pause();
     });
-    video.addEventListener("play", () => { toggle.textContent = "Ⅱ Pause video"; status.textContent = "Recording playing…"; });
+    video.addEventListener("play", () => {
+      toggle.textContent = `Ⅱ Pause ${mediaLabel}`;
+      status.textContent = "Recording playing…";
+    });
     video.addEventListener("pause", () => {
-      toggle.textContent = video.ended ? "↻ Replay video" : "▶ Resume video";
+      toggle.textContent = video.ended ? `↻ Replay ${mediaLabel}` : `▶ Resume ${mediaLabel}`;
       if (!video.ended && !state.watched[id]) status.textContent = "Recording paused. Finish playback to continue.";
     });
     video.addEventListener("timeupdate", () => {
@@ -284,11 +316,12 @@
     video.addEventListener("ended", () => {
       state.watched[id] = true;
       status.textContent = "✓ Recording finished — you can continue or replay.";
-      toggle.textContent = "↻ Replay video";
+      toggle.textContent = `↻ Replay ${mediaLabel}`;
       fill.style.width = "100%";
       updateNextAvailability();
     });
     if (state.missingVideos[id]) showMissingVideo();
+    else startPlayback(true);
   }
 
   function setupDetails() {
