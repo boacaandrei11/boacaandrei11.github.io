@@ -1,8 +1,15 @@
-/* ASF Group 4 questionnaire content — draft-3
- * Based on the team's questionnaire PDF.
- * Context page 2 removed, and unfilled non-sound copy hidden/removed.
- * Sound scenario 01–08 question and answer placeholders remain pending team input.
- * Video paths, scenario IDs and backend payload remain unchanged.
+/* ASF Group 4 questionnaire content — draft-5
+ * Sound scenarios: participant-facing safety questions stay identical within each modality.
+ * RESEARCHER-ONLY SOUND STIMULUS KEY (not displayed to questionnaire participants):
+ * sound-01.mp3 = cruising
+ * sound-02.mp3 = braking / slowing down
+ * sound-03.mp3 = full stop
+ * sound-04.mp3 = moving off from stationary
+ * sound-05.mp4 = full stop then proceeds, DAY
+ * sound-06.mp4 = full stop then proceeds, NIGHT
+ * sound-07.mp4 = slows down as if stopping, but NEVER fully stops, DAY
+ * sound-08.mp4 = slows down as if stopping, but NEVER fully stops, NIGHT
+ * Original scenario IDs and media filenames are unchanged.
  */
 window.ASF_CONTENT = {
   "project": {
@@ -11,7 +18,7 @@ window.ASF_CONTENT = {
     "subtitle": "An interactive research questionnaire",
     "university": "0HM310 · Automotive societal factors · Q1 (2026) - group 4",
     "estimatedTime": "10 minutes",
-    "version": "draft-3"
+    "version": "draft-5"
   },
   "welcome": {
     "eyebrow": "WELCOME TO THE STUDY",
@@ -45,8 +52,8 @@ window.ASF_CONTENT = {
     "eyebrow": "PART TWO / AUDITORY SIGNALS",
     "title": "The external sound system",
     "paragraphs": [
-      "The purpose of the sound is to communicate to the surroundings that an AV is stopping for on the road. For the first 4 scenarios, only the sound is used. Imagine here that a car is approaching and, the moment it is slowing down, this sound will be produced. Do you feel confident to cross now? The same questions will be asked in the last 4 scenarios, where a simulation with sound is shown.",
-      "Please make sure the sound on your device is working properly"
+      "In this section, you will evaluate sounds that an autonomous vehicle might use to communicate with pedestrians. For the first four scenarios, you will hear only the sound. Imagine that you are waiting to cross the road near the vehicle, and judge how safe you would feel based on the audio alone.",
+      "For the next four scenarios, you will watch videos with sound. Consider both the vehicle’s movement and what you hear. In every scenario, select the answer that best reflects how safe you would feel crossing. Please enable sound and use headphones if possible."
     ],
     "callout": "4 audio clips + 4 videos – 8 multiple-choice questions – Sound required"
   },
@@ -281,112 +288,112 @@ window.ASF_CONTENT = {
       "id": "sound-01",
       "title": "Sound — Scenario 1",
       "video": "videos/sound-01.mp3",
-      "videoCaption": "[Describe sound scenario 1 here; avoid revealing the answer.]",
-      "question": "[Sound 1] What do you think the vehicle is communicating?",
+      "videoCaption": "Listen to the audio from the perspective of someone waiting to cross the road near an autonomous vehicle.",
+      "question": "Based only on the sound you heard, how safe would you feel crossing the road in front of the vehicle?",
       "choices": [
-        "[Option A — replace]",
-        "[Option B — replace]",
-        "[Option C — replace]",
-        "[Option D — replace]",
-        "I am not sure"
+        "Very unsafe",
+        "Somewhat unsafe",
+        "Neither safe nor unsafe",
+        "Somewhat safe",
+        "Very safe"
       ]
     },
     {
       "id": "sound-02",
       "title": "Sound — Scenario 2",
       "video": "videos/sound-02.mp3",
-      "videoCaption": "[Describe sound scenario 2 here; avoid revealing the answer.]",
-      "question": "[Sound 2] What do you think the vehicle is communicating?",
+      "videoCaption": "Listen to the audio from the perspective of someone waiting to cross the road near an autonomous vehicle.",
+      "question": "Based only on the sound you heard, how safe would you feel crossing the road in front of the vehicle?",
       "choices": [
-        "[Option A — replace]",
-        "[Option B — replace]",
-        "[Option C — replace]",
-        "[Option D — replace]",
-        "I am not sure"
+        "Very unsafe",
+        "Somewhat unsafe",
+        "Neither safe nor unsafe",
+        "Somewhat safe",
+        "Very safe"
       ]
     },
     {
       "id": "sound-03",
       "title": "Sound — Scenario 3",
       "video": "videos/sound-03.mp3",
-      "videoCaption": "[Describe sound scenario 3 here; avoid revealing the answer.]",
-      "question": "[Sound 3] What do you think the vehicle is communicating?",
+      "videoCaption": "Listen to the audio from the perspective of someone waiting to cross the road near an autonomous vehicle.",
+      "question": "Based only on the sound you heard, how safe would you feel crossing the road in front of the vehicle?",
       "choices": [
-        "[Option A — replace]",
-        "[Option B — replace]",
-        "[Option C — replace]",
-        "[Option D — replace]",
-        "I am not sure"
+        "Very unsafe",
+        "Somewhat unsafe",
+        "Neither safe nor unsafe",
+        "Somewhat safe",
+        "Very safe"
       ]
     },
     {
       "id": "sound-04",
       "title": "Sound — Scenario 4",
       "video": "videos/sound-04.mp3",
-      "videoCaption": "[Describe sound scenario 4 here; avoid revealing the answer.]",
-      "question": "[Sound 4] What do you think the vehicle is communicating?",
+      "videoCaption": "Listen to the audio from the perspective of someone waiting to cross the road near an autonomous vehicle.",
+      "question": "Based only on the sound you heard, how safe would you feel crossing the road in front of the vehicle?",
       "choices": [
-        "[Option A — replace]",
-        "[Option B — replace]",
-        "[Option C — replace]",
-        "[Option D — replace]",
-        "I am not sure"
+        "Very unsafe",
+        "Somewhat unsafe",
+        "Neither safe nor unsafe",
+        "Somewhat safe",
+        "Very safe"
       ]
     },
     {
       "id": "sound-05",
       "title": "Sound — Scenario 5",
       "video": "videos/sound-05.mp4",
-      "videoCaption": "[Describe sound scenario 5 here; avoid revealing the answer.]",
-      "question": "[Sound 5] What do you think the vehicle is communicating?",
+      "videoCaption": "Watch the video with sound from the perspective of a pedestrian waiting to cross the road.",
+      "question": "Based on what you saw and heard, how safe would you feel crossing the road in front of the vehicle?",
       "choices": [
-        "[Option A — replace]",
-        "[Option B — replace]",
-        "[Option C — replace]",
-        "[Option D — replace]",
-        "I am not sure"
+        "Very unsafe",
+        "Somewhat unsafe",
+        "Neither safe nor unsafe",
+        "Somewhat safe",
+        "Very safe"
       ]
     },
     {
       "id": "sound-06",
       "title": "Sound — Scenario 6",
       "video": "videos/sound-06.mp4",
-      "videoCaption": "[Describe sound scenario 6 here; avoid revealing the answer.]",
-      "question": "[Sound 6] What do you think the vehicle is communicating?",
+      "videoCaption": "Watch the video with sound from the perspective of a pedestrian waiting to cross the road.",
+      "question": "Based on what you saw and heard, how safe would you feel crossing the road in front of the vehicle?",
       "choices": [
-        "[Option A — replace]",
-        "[Option B — replace]",
-        "[Option C — replace]",
-        "[Option D — replace]",
-        "I am not sure"
+        "Very unsafe",
+        "Somewhat unsafe",
+        "Neither safe nor unsafe",
+        "Somewhat safe",
+        "Very safe"
       ]
     },
     {
       "id": "sound-07",
       "title": "Sound — Scenario 7",
       "video": "videos/sound-07.mp4",
-      "videoCaption": "[Describe sound scenario 7 here; avoid revealing the answer.]",
-      "question": "[Sound 7] What do you think the vehicle is communicating?",
+      "videoCaption": "Watch the video with sound from the perspective of a pedestrian waiting to cross the road.",
+      "question": "Based on what you saw and heard, how safe would you feel crossing the road in front of the vehicle?",
       "choices": [
-        "[Option A — replace]",
-        "[Option B — replace]",
-        "[Option C — replace]",
-        "[Option D — replace]",
-        "I am not sure"
+        "Very unsafe",
+        "Somewhat unsafe",
+        "Neither safe nor unsafe",
+        "Somewhat safe",
+        "Very safe"
       ]
     },
     {
       "id": "sound-08",
       "title": "Sound — Scenario 8",
       "video": "videos/sound-08.mp4",
-      "videoCaption": "[Describe sound scenario 8 here; avoid revealing the answer.]",
-      "question": "[Sound 8] What do you think the vehicle is communicating?",
+      "videoCaption": "Watch the video with sound from the perspective of a pedestrian waiting to cross the road.",
+      "question": "Based on what you saw and heard, how safe would you feel crossing the road in front of the vehicle?",
       "choices": [
-        "[Option A — replace]",
-        "[Option B — replace]",
-        "[Option C — replace]",
-        "[Option D — replace]",
-        "I am not sure"
+        "Very unsafe",
+        "Somewhat unsafe",
+        "Neither safe nor unsafe",
+        "Somewhat safe",
+        "Very safe"
       ]
     }
   ],
